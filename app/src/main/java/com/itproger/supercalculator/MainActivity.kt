@@ -1,12 +1,9 @@
 package com.itproger.supercalculator
 
-import android.graphics.PorterDuff
 import android.os.Bundle
 import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
 import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -23,8 +20,7 @@ class MainActivity : AppCompatActivity() {
         editText = findViewById(R.id.editText)
         resultViewText = findViewById(R.id.resultTextView)
 
-        setpInputChangeListener()
-
+        // список всех кнопок
         val buttonIds = arrayOf(
             R.id.button0, R.id.button1, R.id.button2, R.id.button3, R.id.button4,
             R.id.button5, R.id.button6, R.id.button7, R.id.button8, R.id.button9,
@@ -33,6 +29,7 @@ class MainActivity : AppCompatActivity() {
             R.id.AC, R.id.buttonEquals
         )
 
+        // покраска кнопок в определенный цвет
         for (buttonId in buttonIds) {
             val button = findViewById<Button>(buttonId)
             if (buttonId in arrayOf(
@@ -55,7 +52,14 @@ class MainActivity : AppCompatActivity() {
 
                 button.background = drawable
             }
-            if (buttonId in arrayOf(R.id.buttonEquals, R.id.buttonMinus, R.id.buttonMult, R.id.buttonDivide, R.id.buttonAdd)) {
+            if (buttonId in arrayOf(
+                    R.id.buttonEquals,
+                    R.id.buttonMinus,
+                    R.id.buttonMult,
+                    R.id.buttonDivide,
+                    R.id.buttonAdd
+                )
+            ) {
                 val color = ContextCompat.getColor(this, R.color.yellow)
                 val drawable = ContextCompat.getDrawable(this, R.drawable.rounded_button)
                 drawable?.setTint(color)
@@ -75,30 +79,19 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonEquals).setOnClickListener { onEqualsButtonClick() }
     }
 
-    private fun setpInputChangeListener() {
-        editText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val expression = s.toString()
-                try {
-                    val result = evaluateExpression(expression)
-                    resultViewText.setText(result.toString())
-                } catch (e: Exception) {
-                    resultViewText.text = ""
-                }
-            }
 
-            override fun afterTextChanged(s: Editable?) {}
-        })
-    }
-
+    // Функция для обработки нажатия на кнопки
     private fun onButtonClick(view: View) {
         val button = view as Button
         val buttonText = button.text.toString()
         val currentText = editText.text.toString()
 
         when (buttonText) {
-            "AC" -> editText.setText("")
+            "AC" -> {
+                editText.setText("")
+                resultViewText.setText("0")
+            }
+
             "C" -> {
                 if (currentText.isNotEmpty()) {
                     editText.setText(currentText.dropLast(1))
@@ -109,18 +102,30 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Функция для обработки нажатия на кнопку "равно"
     private fun onEqualsButtonClick() {
         val currentText = editText.text.toString()
         try {
             val result = evaluateExpression(currentText)
-            val resultInt = result.toInt()
-            resultViewText.text = Editable.Factory.getInstance().newEditable(resultInt.toString())
+            if (result % 1 == 0.0f) {
+                val resultInt = result.toInt()
+                resultViewText.text =
+                    Editable.Factory.getInstance().newEditable(resultInt.toString())
+            } else {
+                val resultFloat = result.toFloat()
+                resultViewText.text =
+                    Editable.Factory.getInstance().newEditable(resultFloat.toString())
+            }
         } catch (e: Exception) {
             editText.setText("Error: ${e.message}")
         }
     }
 
-    private fun evaluateExpression(expression: String): Int {
-        return ExpressionBuilder(expression).build().evaluate().toInt()
+    // Функция для вычисления математического выражения
+    private fun evaluateExpression(expression: String): Float {
+        if (expression.isEmpty()) {
+            return 0.0f
+        }
+        return ExpressionBuilder(expression).build().evaluate().toFloat()
     }
 }
